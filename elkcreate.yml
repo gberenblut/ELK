@@ -1,0 +1,77 @@
+--- 
+- 
+  hosts: all
+  tasks: 
+    - 
+      docker: 
+        env: 
+          ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+          cluster.initial_master_nodes: "elasticsearch,elasticsearch2"
+          cluster.name: elasticsearch
+          discovery.seed_hosts: elasticsearch2
+          node.name: elasticsearch
+        hostname: elasticsearch
+        image: "elasticsearch:7.4.0"
+        name: elasticsearch
+        net: elk
+        ports: 
+          - "9200:9200"
+          - "9300:9300"
+        state: started
+      name: "run elasticsearch container"
+    - 
+      docker: 
+        env:
+          #discovery.zen.ping.unicast.hosts: elasticsearch
+          ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+          cluster.initial_master_nodes: "elasticsearch, elasticsearch2"
+          cluster.name: elasticsearch
+          discovery.seed_hosts: elasticsearch
+          node.name: elasticsearch2
+        hostname: elasticsearch2
+        image: "elasticsearch:7.4.0"
+        name: elasticsearch2
+        net: elk
+        state: started
+    - 
+      docker: 
+        hostname: kibana
+        image: "kibana:7.4.0"
+        links: 
+          - "elasticsearch:elasticsearch"
+        name: kibana
+        net: elk
+        ports: 
+          - "5601:5601"
+        state: started
+      name: "run kibana container"
+    - 
+      docker: 
+        command: "logstash -f /config_files/logstash.conf"
+        hostname: logstash
+        image: "logstash:7.4.0"
+        links: 
+          - "elasticsearch:elasticsearch"
+        name: logstash
+        net: elk
+        ports: 
+          - "5000:5000"
+          - "9600:9600"
+        state: started
+        volumes: 
+          - "/gilad/ELKCreate/logstash.conf:/config_files/logstash.conf"
+      name: "run logstash container"
+    - 
+      docker: 
+        docker_user: root
+        hostname: filebeat
+        image: "filebeat:7.4.0"
+        name: filebeat
+        net: elk
+        state: started
+        volumes: 
+          - "/gilad/ELKCreate/filebeat.yml:/usr/share/filebeat/filebeat.yml"
+          - "/var/lib/docker:/var/lib/docker"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+      name: "run filebeat container"
+
