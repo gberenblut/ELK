@@ -22,7 +22,6 @@
     - 
       docker: 
         env:
-          #discovery.zen.ping.unicast.hosts: elasticsearch
           ES_JAVA_OPTS: "-Xms4g -Xmx4g"
           cluster.initial_master_nodes: "elasticsearch, elasticsearch2"
           cluster.name: elasticsearch
@@ -33,6 +32,7 @@
         name: elasticsearch2
         net: elk
         state: started
+      name: create second elasticsearch container
     - 
       docker: 
         hostname: kibana
